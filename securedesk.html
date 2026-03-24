@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>SecureDesk — IT & Training Task Manager</title>
+<link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2128;
+    --border: #30363d;
+    --text: #e6edf3;
+    --muted: #8b949e;
+    --accent: #58a6ff;
+    --accent-dim: #1f3a5f;
+    --green: #3fb950;
+    --green-dim: #1a3d26;
+    --amber: #d29922;
+    --amber-dim: #3d2e0a;
+    --red: #f85149;
+    --red-dim: #3d1414;
+    --purple: #bc8cff;
+    --purple-dim: #2d1f4e;
+    --font: 'IBM Plex Sans', sans-serif;
+    --mono: 'IBM Plex Mono', monospace;
+    --radius: 8px;
+    --radius-lg: 12px;
+  }
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  body { font-family: var(--font); background: var(--bg); color: var(--text); min-height: 100vh; font-size: 14px; }
+
+  /* LOGIN SCREEN */
+  .login-screen {
+    min-height: 100vh;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    background: var(--bg);
+  }
+  .login-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 16px;
+    padding: 48px 40px;
+    width: 380px;
+    text-align: center;
+  }
+  .login-logo {
+    font-family: var(--mono);
+    font-size: 22px;
+    color: var(--accent);
+    margin-bottom: 8px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+  }
+  .login-logo-icon {
+    width: 36px; height: 36px;
+    background: var(--accent-dim);
+    border: 1px solid var(--accent);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .login-subtitle { color: var(--muted); font-size: 13px; margin-bottom: 36px; }
+  .google-btn {
+    width: 100%;
+    background: #fff;
+    border: 1px solid #dadce0;
+    border-radius: 8px;
+    padding: 12px 16px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    cursor: pointer;
+    font-family: var(--font);
+    font-size: 14px;
+    font-weight: 500;
+    color: #3c4043;
+    transition: box-shadow 0.15s;
+  }
+  .google-btn:hover { box-shadow: 0 2px 8px rgba(0,0,0,0.2); }
+  .google-btn svg { width: 18px; height: 18px; flex-shrink: 0; }
+  .login-note { font-size: 11px; color: var(--muted); margin-top: 20px; line-height: 1.6; }
+
+  /* TOPBAR */
+  .topbar {
+    background: var(--surface);
+    border-bottom: 1px solid var(--border);
+    padding: 0 24px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    height: 56px;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+  .logo { display: flex; align-items: center; gap: 10px; font-family: var(--mono); font-weight: 500; font-size: 15px; color: var(--accent); }
+  .logo-icon { width: 28px; height: 28px; background: var(--accent-dim); border: 1px solid var(--accent); border-radius: 6px; display: flex; align-items: center; justify-content: center; font-size: 14px; }
+  .topbar-right { display: flex; align-items: center; gap: 12px; }
+  .user-avatar {
+    width: 30px; height: 30px; border-radius: 50%;
+    background: var(--accent-dim); border: 1px solid var(--accent);
+    display: flex; align-items: center; justify-content: center;
+    font-size: 12px; font-weight: 600; color: var(--accent);
+    cursor: pointer; overflow: hidden;
+  }
+  .user-avatar img { width: 100%; height: 100%; object-fit: cover; }
+  .shift-badge { background: var(--green-dim); border: 1px solid var(--green); color: var(--green); font-size: 11px; font-family: var(--mono); padding: 3px 10px; border-radius: 4px; }
+  .btn { background: var(--accent-dim); border: 1px solid var(--accent); color: var(--accent); font-family: var(--font); font-size: 13px; font-weight: 500; padding: 6px 14px; border-radius: var(--radius); cursor: pointer; transition: all 0.15s; }
+  .btn:hover { background: var(--accent); color: var(--bg); }
+  .btn-danger { background: var(--red-dim); border-color: var(--red); color: var(--red); }
+  .btn-danger:hover { background: var(--red); color: var(--bg); }
+  .btn-green { background: var(--green-dim); border-color: var(--green); color: var(--green); }
+  .btn-green:hover { background: var(--green); color: var(--bg); }
+  .btn-sm { padding: 4px 10px; font-size: 12px; }
+  .btn-ghost { background: transparent; border-color: var(--border); color: var(--muted); }
+  .btn-ghost:hover { background: var(--surface2); color: var(--text); }
+
+  /* LAYOUT */
+  .layout { display: grid; grid-template-columns: 220px 1fr; min-height: calc(100vh - 56px); }
+  .sidebar { background: var(--surface); border-right: 1px solid var(--border); padding: 20px 0; position: sticky; top: 56px; height: calc(100vh - 56px); overflow-y: auto; }
+  .sidebar-section { margin-bottom: 24px; }
+  .sidebar-label { font-size: 10px; font-family: var(--mono); letter-spacing: 0.1em; color: var(--muted); padding: 0 16px 8px; text-transform: uppercase; }
+  .sidebar-item { display: flex; align-items: center; justify-content: space-between; padding: 8px 16px; cursor: pointer; font-size: 13px; color: var(--muted); border-left: 2px solid transparent; transition: all 0.1s; }
+  .sidebar-item:hover { background: var(--surface2); color: var(--text); }
+  .sidebar-item.active { background: var(--accent-dim); color: var(--accent); border-left-color: var(--accent); }
+  .sidebar-item-left { display: flex; align-items: center; gap: 8px; }
+  .count-badge { background: var(--surface2); border: 1px solid var(--border); color: var(--muted); font-size: 10px; font-family: var(--mono); padding: 1px 6px; border-radius: 20px; min-width: 20px; text-align: center; }
+  .main { padding: 24px; background: var(--bg); }
+
+  /* STATS */
+  .stats-grid { display: grid; grid-template-columns: repeat(4,1fr); gap: 12px; margin-bottom: 24px; }
+  .stat-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 16px; }
+  .stat-label { font-size: 11px; font-family: var(--mono); color: var(--muted); letter-spacing: 0.05em; text-transform: uppercase; margin-bottom: 6px; }
+  .stat-value { font-size: 28px; font-weight: 600; font-family: var(--mono); line-height: 1; margin-bottom: 4px; }
+  .stat-sub { font-size: 11px; color: var(--muted); }
+  .stat-accent { color: var(--accent); } .stat-red { color: var(--red); } .stat-green { color: var(--green); } .stat-amber { color: var(--amber); }
+
+  /* SECTION */
+  .section-header { display: flex; align-items: center; justify-content: space-between; margin-bottom: 16px; }
+  .section-title { font-size: 13px; font-family: var(--mono); color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; display: flex; align-items: center; gap: 8px; }
+  .section-line { flex: 1; height: 1px; background: var(--border); margin-left: 12px; }
+
+  /* TASK CARD */
+  .tasks-list { display: flex; flex-direction: column; gap: 8px; margin-bottom: 32px; }
+  .task-card { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 14px 16px; display: grid; grid-template-columns: auto 1fr auto; gap: 12px; align-items: start; transition: border-color 0.15s; position: relative; overflow: hidden; }
+  .task-card::before { content: ''; position: absolute; left: 0; top: 0; bottom: 0; width: 3px; }
+  .task-card.priority-critical::before { background: var(--red); }
+  .task-card.priority-high::before { background: var(--amber); }
+  .task-card.priority-medium::before { background: var(--accent); }
+  .task-card.priority-low::before { background: var(--muted); }
+  .task-card:hover { border-color: #484f58; }
+  .task-card.done { opacity: 0.5; }
+  .task-card.done .task-title { text-decoration: line-through; }
+  .task-check { width: 18px; height: 18px; border: 1.5px solid var(--border); border-radius: 4px; cursor: pointer; display: flex; align-items: center; justify-content: center; flex-shrink: 0; margin-top: 1px; transition: all 0.15s; background: transparent; }
+  .task-check:hover { border-color: var(--green); }
+  .task-check.checked { background: var(--green); border-color: var(--green); }
+  .task-check.checked::after { content: '✓'; color: var(--bg); font-size: 11px; font-weight: 700; }
+  .task-body { min-width: 0; }
+  .task-title { font-size: 14px; font-weight: 500; color: var(--text); margin-bottom: 6px; line-height: 1.4; }
+  .task-meta { display: flex; flex-wrap: wrap; gap: 6px; align-items: center; }
+  .tag { font-size: 10px; font-family: var(--mono); padding: 2px 8px; border-radius: 4px; letter-spacing: 0.04em; font-weight: 500; }
+  .tag-it { background: var(--accent-dim); color: var(--accent); border: 1px solid #1f3a5f; }
+  .tag-training { background: var(--purple-dim); color: var(--purple); border: 1px solid #3d2a6e; }
+  .tag-incident { background: var(--red-dim); color: var(--red); border: 1px solid #5a1e1e; }
+  .tag-shift { background: var(--green-dim); color: var(--green); border: 1px solid #1e4d2a; }
+  .priority-tag { font-size: 10px; font-family: var(--mono); padding: 2px 8px; border-radius: 4px; }
+  .p-critical { background: var(--red-dim); color: var(--red); }
+  .p-high { background: var(--amber-dim); color: var(--amber); }
+  .p-medium { background: var(--accent-dim); color: var(--accent); }
+  .p-low { background: var(--surface2); color: var(--muted); }
+  .due-date { font-size: 11px; font-family: var(--mono); color: var(--muted); }
+  .due-date.overdue { color: var(--red); }
+  .due-date.today { color: var(--amber); }
+  .task-actions { display: flex; gap: 6px; flex-shrink: 0; }
+  .icon-btn { width: 28px; height: 28px; background: transparent; border: 1px solid transparent; border-radius: 6px; cursor: pointer; display: flex; align-items: center; justify-content: center; font-size: 13px; color: var(--muted); transition: all 0.15s; }
+  .icon-btn:hover { background: var(--surface2); border-color: var(--border); color: var(--text); }
+  .icon-btn.escalated { color: var(--red); }
+  .escalation-flag { display: inline-flex; align-items: center; gap: 4px; background: var(--red-dim); border: 1px solid var(--red); color: var(--red); font-size: 10px; font-family: var(--mono); padding: 2px 8px; border-radius: 4px; }
+
+  /* SHIFT NOTES */
+  .shift-note-item { background: var(--surface2); border: 1px solid var(--border); border-radius: var(--radius); padding: 10px 12px; margin-bottom: 8px; font-size: 13px; line-height: 1.5; }
+  .shift-note-time { font-size: 10px; font-family: var(--mono); color: var(--muted); margin-top: 6px; }
+
+  /* INCIDENT */
+  .incident-card { background: var(--surface); border: 1px solid var(--border); border-left: 3px solid var(--red); border-radius: var(--radius-lg); padding: 14px 16px; margin-bottom: 8px; display: grid; grid-template-columns: 1fr auto; gap: 12px; align-items: start; }
+  .incident-id { font-family: var(--mono); font-size: 11px; color: var(--red); margin-bottom: 4px; }
+  .incident-title { font-size: 14px; font-weight: 500; margin-bottom: 6px; }
+  .status-badge { font-size: 10px; font-family: var(--mono); padding: 2px 8px; border-radius: 4px; font-weight: 500; }
+  .status-open { background: var(--red-dim); color: var(--red); border: 1px solid #5a1e1e; }
+  .status-inprogress { background: var(--amber-dim); color: var(--amber); border: 1px solid #5a3e0a; }
+  .status-resolved { background: var(--green-dim); color: var(--green); border: 1px solid #1e4d2a; }
+
+  /* REPORT */
+  .report-section { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 20px; margin-bottom: 16px; }
+  .report-title { font-family: var(--mono); font-size: 12px; color: var(--muted); letter-spacing: 0.08em; text-transform: uppercase; margin-bottom: 12px; }
+  .report-row { display: flex; justify-content: space-between; align-items: center; padding: 8px 0; border-bottom: 1px solid var(--border); font-size: 13px; }
+  .report-row:last-child { border-bottom: none; }
+  .progress-bar { height: 4px; background: var(--surface2); border-radius: 2px; margin-top: 8px; overflow: hidden; }
+  .progress-fill { height: 100%; border-radius: 2px; }
+
+  /* MODAL */
+  .modal-overlay { display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.7); z-index: 200; align-items: center; justify-content: center; }
+  .modal-overlay.open { display: flex; }
+  .modal { background: var(--surface); border: 1px solid var(--border); border-radius: var(--radius-lg); padding: 24px; width: 520px; max-width: 95vw; max-height: 85vh; overflow-y: auto; }
+  .modal-title { font-size: 16px; font-weight: 600; margin-bottom: 20px; display: flex; align-items: center; justify-content: space-between; }
+  .modal-close { background: none; border: none; color: var(--muted); cursor: pointer; font-size: 18px; line-height: 1; }
+  .modal-close:hover { color: var(--text); }
+  .form-group { margin-bottom: 16px; }
+  .form-label { display: block; font-size: 11px; font-family: var(--mono); color: var(--muted); letter-spacing: 0.06em; text-transform: uppercase; margin-bottom: 6px; }
+  .form-input, .form-select, .form-textarea { width: 100%; background: var(--bg); border: 1px solid var(--border); border-radius: var(--radius); color: var(--text); font-family: var(--font); font-size: 14px; padding: 8px 12px; outline: none; transition: border-color 0.15s; }
+  .form-input:focus, .form-select:focus, .form-textarea:focus { border-color: var(--accent); }
+  .form-textarea { min-height: 80px; resize: vertical; }
+  .form-select option { background: var(--surface); }
+  .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+  .modal-footer { display: flex; justify-content: flex-end; gap: 8px; margin-top: 20px; padding-top: 16px; border-top: 1px solid var(--border); }
+
+  /* TABS */
+  .tabs { display: flex; border-bottom: 1px solid var(--border); margin-bottom: 20px; }
+  .tab { padding: 8px 16px; font-size: 13px; color: var(--muted); cursor: pointer; border-bottom: 2px solid transparent; transition: all 0.15s; font-family: var(--font); background: none; border-top: none; border-left: none; border-right: none; }
+  .tab:hover { color: var(--text); }
+  .tab.active { color: var(--accent); border-bottom-color: var(--accent); }
+
+  /* LOADING */
+  .loading-screen { min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 16px; color: var(--muted); font-family: var(--mono); font-size: 13px; }
+  .spinner { width: 32px; height: 32px; border: 2px solid var(--border); border-top-color: var(--accent); border-radius: 50%; animation: spin 0.8s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--muted); font-size: 13px; }
+  .empty-state-icon { font-size: 32px; margin-bottom: 8px; opacity: 0.5; }
+
+  /* SYNC INDICATOR */
+  .sync-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--green); display: inline-block; margin-right: 4px; }
+  .sync-dot.syncing { background: var(--amber); animation: pulse 1s ease-in-out infinite; }
+  @keyframes pulse { 0%,100%{opacity:1} 50%{opacity:0.4} }
+
+  @media (max-width: 768px) {
+    .layout { grid-template-columns: 1fr; }
+    .sidebar { display: none; }
+    .stats-grid { grid-template-columns: repeat(2,1fr); }
+  }
+</style>
+</head>
+<body>
+
+<!-- LOADING -->
+<div class="loading-screen" id="loadingScreen">
+  <div class="spinner"></div>
+  <div>Loading SecureDesk...</div>
+</div>
+
+<!-- LOGIN -->
+<div class="login-screen" id="loginScreen" style="display:none">
+  <div class="login-card">
+    <div class="login-logo">
+      <div class="login-logo-icon">⬡</div>
+      SecureDesk
+    </div>
+    <div class="login-subtitle">IT & Training Task Manager</div>
+    <button class="google-btn" onclick="signInWithGoogle()">
+      <svg viewBox="0 0 48 48"><path fill="#EA4335" d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"/><path fill="#4285F4" d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"/><path fill="#FBBC05" d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24c0 3.88.92 7.54 2.56 10.78l7.97-6.19z"/><path fill="#34A853" d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.18 1.48-4.97 2.31-8.16 2.31-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"/><path fill="none" d="M0 0h48v48H0z"/></svg>
+      Sign in with Google
+    </button>
+    <div class="login-note">Your data is private and only accessible to you.<br>Syncs across all your devices automatically.</div>
+  </div>
+</div>
+
+<!-- MAIN APP -->
+<div id="appShell" style="display:none">
+  <div class="topbar">
+    <div class="logo">
+      <div class="logo-icon">⬡</div>
+      SecureDesk
+    </div>
+    <div class="topbar-right">
+      <span class="sync-dot" id="syncDot"></span>
+      <div class="shift-badge">● SHIFT ACTIVE</div>
+      <div style="font-size:12px;color:var(--muted);font-family:var(--mono)" id="clock"></div>
+      <button class="btn" onclick="openAddTask()">+ New Task</button>
+      <div class="user-avatar" id="userAvatar" title="Sign out" onclick="confirmSignOut()"></div>
+    </div>
+  </div>
+
+  <div class="layout">
+    <div class="sidebar">
+      <div class="sidebar-section">
+        <div class="sidebar-label">Views</div>
+        <div class="sidebar-item active" onclick="setView('dashboard',this)"><div class="sidebar-item-left">📊 Dashboard</div></div>
+        <div class="sidebar-item" onclick="setView('tasks',this)"><div class="sidebar-item-left">✅ All Tasks</div><span class="count-badge" id="allCount">0</span></div>
+        <div class="sidebar-item" onclick="setView('incidents',this)"><div class="sidebar-item-left">🚨 Incidents</div><span class="count-badge" id="incCount">0</span></div>
+        <div class="sidebar-item" onclick="setView('shift',this)"><div class="sidebar-item-left">📋 Shift Notes</div></div>
+        <div class="sidebar-item" onclick="setView('report',this)"><div class="sidebar-item-left">📄 Reports</div></div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Categories</div>
+        <div class="sidebar-item" onclick="filterCat('IT',this)"><div class="sidebar-item-left"><span style="color:var(--accent)">◆</span> IT Tasks</div><span class="count-badge" id="itCount">0</span></div>
+        <div class="sidebar-item" onclick="filterCat('Training',this)"><div class="sidebar-item-left"><span style="color:var(--purple)">◆</span> Training</div><span class="count-badge" id="trainCount">0</span></div>
+      </div>
+      <div class="sidebar-section">
+        <div class="sidebar-label">Priority</div>
+        <div class="sidebar-item" onclick="filterPri('Critical',this)"><div class="sidebar-item-left"><span style="color:var(--red)">●</span> Critical</div><span class="count-badge" id="critCount">0</span></div>
+        <div class="sidebar-item" onclick="filterPri('High',this)"><div class="sidebar-item-left"><span style="color:var(--amber)">●</span> High</div><span class="count-badge" id="highCount">0</span></div>
+        <div class="sidebar-item" onclick="filterPri('Escalated',this)"><div class="sidebar-item-left"><span style="color:var(--red)">⚑</span> Escalated</div><span class="count-badge" id="escalCount">0</span></div>
+      </div>
+      <div class="sidebar-section" style="padding: 0 16px">
+        <button class="btn btn-ghost btn-sm" style="width:100%;margin-top:8px" onclick="confirmSignOut()">Sign out</button>
+      </div>
+    </div>
+    <div class="main" id="mainContent"></div>
+  </div>
+</div>
+
+<!-- TASK MODAL -->
+<div class="modal-overlay" id="taskModal">
+  <div class="modal">
+    <div class="modal-title"><span id="modalTitle">New Task</span><button class="modal-close" onclick="closeModal('taskModal')">✕</button></div>
+    <div class="form-group"><label class="form-label">Task Title</label><input class="form-input" id="taskTitle" placeholder="Describe the task..." /></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Category</label><select class="form-select" id="taskCat"><option>IT</option><option>Training</option><option>Incident</option><option>Shift</option></select></div>
+      <div class="form-group"><label class="form-label">Priority</label><select class="form-select" id="taskPri"><option>Low</option><option selected>Medium</option><option>High</option><option>Critical</option></select></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Due Date</label><input type="date" class="form-input" id="taskDue" /></div>
+      <div class="form-group"><label class="form-label">Status</label><select class="form-select" id="taskStatus"><option>To Do</option><option>In Progress</option><option>Done</option></select></div>
+    </div>
+    <div class="form-group"><label class="form-label">Notes / Details</label><textarea class="form-textarea" id="taskNotes" placeholder="Add any relevant details..."></textarea></div>
+    <div class="form-group" style="display:flex;align-items:center;gap:10px">
+      <input type="checkbox" id="taskEscalate" style="width:16px;height:16px;cursor:pointer;" />
+      <label for="taskEscalate" style="font-size:13px;color:var(--muted);cursor:pointer">Mark as Escalated / Needs Attention</label>
+    </div>
+    <input type="hidden" id="editId" value="" />
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('taskModal')">Cancel</button>
+      <button class="btn btn-green" onclick="saveTask()">Save Task</button>
+    </div>
+  </div>
+</div>
+
+<!-- SHIFT NOTE MODAL -->
+<div class="modal-overlay" id="noteModal">
+  <div class="modal" style="width:440px">
+    <div class="modal-title"><span>Add Shift Note</span><button class="modal-close" onclick="closeModal('noteModal')">✕</button></div>
+    <div class="form-group"><label class="form-label">Note</label><textarea class="form-textarea" id="noteText" placeholder="Log shift activity, handover notes, observations..." style="min-height:120px"></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('noteModal')">Cancel</button>
+      <button class="btn btn-green" onclick="saveNote()">Add Note</button>
+    </div>
+  </div>
+</div>
+
+<!-- INCIDENT MODAL -->
+<div class="modal-overlay" id="incModal">
+  <div class="modal">
+    <div class="modal-title"><span>Log Incident / Ticket</span><button class="modal-close" onclick="closeModal('incModal')">✕</button></div>
+    <div class="form-group"><label class="form-label">Incident Title</label><input class="form-input" id="incTitle" placeholder="Brief description..." /></div>
+    <div class="form-row">
+      <div class="form-group"><label class="form-label">Ticket / Ref #</label><input class="form-input" id="incRef" placeholder="e.g. INC-0042" /></div>
+      <div class="form-group"><label class="form-label">Status</label><select class="form-select" id="incStatus"><option>Open</option><option>In Progress</option><option>Resolved</option></select></div>
+    </div>
+    <div class="form-group"><label class="form-label">Details</label><textarea class="form-textarea" id="incDetails" placeholder="Steps taken, affected systems, impact..."></textarea></div>
+    <div class="modal-footer">
+      <button class="btn btn-ghost" onclick="closeModal('incModal')">Cancel</button>
+      <button class="btn btn-danger" onclick="saveIncident()">Log Incident</button>
+    </div>
+  </div>
+</div>
+
+<!-- Firebase SDKs -->
+<script type="module">
+import { initializeApp } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-app.js";
+import { getAuth, GoogleAuthProvider, signInWithPopup, signOut, onAuthStateChanged } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-auth.js";
+import { getFirestore, collection, doc, addDoc, setDoc, deleteDoc, onSnapshot, query, orderBy, updateDoc } from "https://www.gstatic.com/firebasejs/10.12.0/firebase-firestore.js";
+
+const firebaseConfig = {
+  apiKey: "AIzaSyBEQr7Fq77i_RtVI7cQNHixLWwLT3vJzkg",
+  authDomain: "todo-app-7fc4b.firebaseapp.com",
+  projectId: "todo-app-7fc4b",
+  storageBucket: "todo-app-7fc4b.firebasestorage.app",
+  messagingSenderId: "137954741396",
+  appId: "1:137954741396:web:1405364dcc41d59759f881"
+};
+
+const app = initializeApp(firebaseConfig);
+const auth = getAuth(app);
+const db = getFirestore(app);
+
+// STATE
+let tasks = [], incidents = [], shiftNotes = [];
+let currentView = 'dashboard', activeFilter = null;
+let unsubTasks, unsubIncidents, unsubNotes;
+let currentUser = null;
+
+// CLOCK
+setInterval(() => {
+  const el = document.getElementById('clock');
+  if (el) el.textContent = new Date().toLocaleTimeString('en-ZA', {hour12:false});
+}, 1000);
+
+// AUTH
+window.signInWithGoogle = async () => {
+  const provider = new GoogleAuthProvider();
+  try { await signInWithPopup(auth, provider); }
+  catch(e) { alert('Sign in failed: ' + e.message); }
+};
+
+window.confirmSignOut = () => {
+  if (confirm('Sign out of SecureDesk?')) signOut(auth);
+};
+
+onAuthStateChanged(auth, user => {
+  document.getElementById('loadingScreen').style.display = 'none';
+  if (user) {
+    currentUser = user;
+    document.getElementById('loginScreen').style.display = 'none';
+    document.getElementById('appShell').style.display = 'block';
+    // Set avatar
+    const av = document.getElementById('userAvatar');
+    if (user.photoURL) av.innerHTML = `<img src="${user.photoURL}" alt="avatar">`;
+    else av.textContent = user.displayName?.[0]?.toUpperCase() || 'U';
+    subscribeToData(user.uid);
+    render();
+  } else {
+    currentUser = null;
+    document.getElementById('loginScreen').style.display = 'flex';
+    document.getElementById('appShell').style.display = 'none';
+    if (unsubTasks) unsubTasks();
+    if (unsubIncidents) unsubIncidents();
+    if (unsubNotes) unsubNotes();
+    tasks = []; incidents = []; shiftNotes = [];
+  }
+});
+
+// FIRESTORE SUBSCRIPTIONS (real-time sync)
+function subscribeToData(uid) {
+  setSyncing(true);
+
+  unsubTasks = onSnapshot(
+    query(collection(db, 'users', uid, 'tasks'), orderBy('created', 'desc')),
+    snap => { tasks = snap.docs.map(d => ({id: d.id, ...d.data()})); setSyncing(false); render(); },
+    err => console.error('tasks:', err)
+  );
+
+  unsubIncidents = onSnapshot(
+    query(collection(db, 'users', uid, 'incidents'), orderBy('ts', 'desc')),
+    snap => { incidents = snap.docs.map(d => ({id: d.id, ...d.data()})); render(); },
+    err => console.error('incidents:', err)
+  );
+
+  unsubNotes = onSnapshot(
+    query(collection(db, 'users', uid, 'notes'), orderBy('ts', 'desc')),
+    snap => { shiftNotes = snap.docs.map(d => ({id: d.id, ...d.data()})); render(); },
+    err => console.error('notes:', err)
+  );
+}
+
+function setSyncing(v) {
+  const dot = document.getElementById('syncDot');
+  if (dot) dot.className = 'sync-dot' + (v ? ' syncing' : '');
+}
+
+// CRUD — Tasks
+window.saveTask = async () => {
+  const title = document.getElementById('taskTitle').value.trim();
+  if (!title) { alert('Please enter a task title'); return; }
+  const id = document.getElementById('editId').value;
+  const data = {
+    title,
+    cat: document.getElementById('taskCat').value,
+    priority: document.getElementById('taskPri').value,
+    due: document.getElementById('taskDue').value,
+    status: document.getElementById('taskStatus').value,
+    notes: document.getElementById('taskNotes').value.trim(),
+    escalated: document.getElementById('taskEscalate').checked,
+    created: id ? (tasks.find(t=>t.id===id)?.created || Date.now()) : Date.now()
+  };
+  setSyncing(true);
+  try {
+    const uid = currentUser.uid;
+    if (id) await setDoc(doc(db, 'users', uid, 'tasks', id), data);
+    else await addDoc(collection(db, 'users', uid, 'tasks'), data);
+    closeModal('taskModal');
+  } catch(e) { alert('Save failed: ' + e.message); setSyncing(false); }
+};
+
+window.deleteTask = async (id) => {
+  if (!confirm('Delete this task?')) return;
+  setSyncing(true);
+  await deleteDoc(doc(db, 'users', currentUser.uid, 'tasks', id));
+};
+
+window.toggleDone = async (id) => {
+  const t = tasks.find(t=>t.id===id);
+  if (!t) return;
+  setSyncing(true);
+  await updateDoc(doc(db, 'users', currentUser.uid, 'tasks', id), { status: t.status==='Done'?'To Do':'Done' });
+};
+
+window.toggleEscalate = async (id) => {
+  const t = tasks.find(t=>t.id===id);
+  if (!t) return;
+  setSyncing(true);
+  await updateDoc(doc(db, 'users', currentUser.uid, 'tasks', id), { escalated: !t.escalated });
+};
+
+// CRUD — Notes
+window.saveNote = async () => {
+  const text = document.getElementById('noteText').value.trim();
+  if (!text) return;
+  setSyncing(true);
+  await addDoc(collection(db, 'users', currentUser.uid, 'notes'), { text, ts: Date.now() });
+  closeModal('noteModal');
+};
+
+window.deleteNote = async (id) => {
+  setSyncing(true);
+  await deleteDoc(doc(db, 'users', currentUser.uid, 'notes', id));
+};
+
+// CRUD — Incidents
+window.saveIncident = async () => {
+  const title = document.getElementById('incTitle').value.trim();
+  if (!title) { alert('Please enter an incident title'); return; }
+  setSyncing(true);
+  await addDoc(collection(db, 'users', currentUser.uid, 'incidents'), {
+    title,
+    ref: document.getElementById('incRef').value.trim(),
+    status: document.getElementById('incStatus').value,
+    details: document.getElementById('incDetails').value.trim(),
+    ts: Date.now()
+  });
+  closeModal('incModal');
+};
+
+window.deleteInc = async (id) => {
+  if (!confirm('Delete this incident?')) return;
+  setSyncing(true);
+  await deleteDoc(doc(db, 'users', currentUser.uid, 'incidents', id));
+};
+
+window.updateIncStatus = async (id, status) => {
+  setSyncing(true);
+  await updateDoc(doc(db, 'users', currentUser.uid, 'incidents', id), { status });
+};
+
+// UI HELPERS
+window.setView = (view, el) => {
+  currentView = view; activeFilter = null;
+  document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
+  if (el) el.classList.add('active');
+  render();
+};
+
+window.filterCat = (cat, el) => {
+  currentView = 'tasks'; activeFilter = {type:'cat', value:cat};
+  document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
+  if (el) el.classList.add('active');
+  render();
+};
+
+window.filterPri = (pri, el) => {
+  currentView = 'tasks';
+  activeFilter = {type: pri==='Escalated'?'escalated':'priority', value:pri};
+  document.querySelectorAll('.sidebar-item').forEach(i=>i.classList.remove('active'));
+  if (el) el.classList.add('active');
+  render();
+};
+
+window.openAddTask = () => {
+  document.getElementById('modalTitle').textContent = 'New Task';
+  ['taskTitle','taskNotes'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('taskCat').value='IT';
+  document.getElementById('taskPri').value='Medium';
+  document.getElementById('taskDue').value='';
+  document.getElementById('taskStatus').value='To Do';
+  document.getElementById('taskEscalate').checked=false;
+  document.getElementById('editId').value='';
+  document.getElementById('taskModal').classList.add('open');
+};
+
+window.editTask = (id) => {
+  const t = tasks.find(t=>t.id===id); if (!t) return;
+  document.getElementById('modalTitle').textContent='Edit Task';
+  document.getElementById('taskTitle').value=t.title;
+  document.getElementById('taskCat').value=t.cat;
+  document.getElementById('taskPri').value=t.priority;
+  document.getElementById('taskDue').value=t.due||'';
+  document.getElementById('taskStatus').value=t.status;
+  document.getElementById('taskNotes').value=t.notes||'';
+  document.getElementById('taskEscalate').checked=t.escalated||false;
+  document.getElementById('editId').value=id;
+  document.getElementById('taskModal').classList.add('open');
+};
+
+window.openNoteModal = () => { document.getElementById('noteText').value=''; document.getElementById('noteModal').classList.add('open'); };
+window.openIncModal = () => {
+  ['incTitle','incRef','incDetails'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('incStatus').value='Open';
+  document.getElementById('incModal').classList.add('open');
+};
+window.closeModal = (id) => document.getElementById(id).classList.remove('open');
+window.switchTab = (el, tab) => {
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'));
+  el.classList.add('active');
+  ['todo','inprog','done'].forEach(id=>{
+    const el=document.getElementById('tab-'+id);
+    if(el) el.style.display=id===tab?'flex':'none';
+  });
+};
+
+document.querySelectorAll('.modal-overlay').forEach(m=>{
+  m.addEventListener('click', e=>{ if(e.target===m) m.classList.remove('open'); });
+});
+
+// RENDER
+function render() {
+  if (!currentUser) return;
+  updateCounts();
+  const main = document.getElementById('mainContent');
+  if (!main) return;
+  if (currentView==='dashboard') main.innerHTML=renderDashboard();
+  else if (currentView==='tasks') main.innerHTML=renderTasks();
+  else if (currentView==='incidents') main.innerHTML=renderIncidents();
+  else if (currentView==='shift') main.innerHTML=renderShift();
+  else if (currentView==='report') main.innerHTML=renderReport();
+}
+window.render = render;
+
+function updateCounts() {
+  const s = (id,v) => { const el=document.getElementById(id); if(el) el.textContent=v; };
+  s('allCount', tasks.length);
+  s('itCount', tasks.filter(t=>t.cat==='IT').length);
+  s('trainCount', tasks.filter(t=>t.cat==='Training').length);
+  s('critCount', tasks.filter(t=>t.priority==='Critical'&&t.status!=='Done').length);
+  s('highCount', tasks.filter(t=>t.priority==='High'&&t.status!=='Done').length);
+  s('escalCount', tasks.filter(t=>t.escalated&&t.status!=='Done').length);
+  s('incCount', incidents.filter(i=>i.status!=='Resolved').length);
+}
+
+function fmt(d) { if(!d) return ''; const p=d.split('-'); return `${p[2]}/${p[1]}/${p[0]}`; }
+function isOverdue(d) { return d && new Date(d)<new Date(new Date().toDateString()) ; }
+function isToday(d) { return d && new Date(d).toDateString()===new Date().toDateString(); }
+function greet() { const h=new Date().getHours(); return h<12?'morning':h<17?'afternoon':'evening'; }
+
+function taskCard(t) {
+  const catClass={IT:'tag-it',Training:'tag-training',Incident:'tag-incident',Shift:'tag-shift'}[t.cat]||'tag-it';
+  const priClass={Critical:'p-critical',High:'p-high',Medium:'p-medium',Low:'p-low'}[t.priority]||'p-medium';
+  const isDone=t.status==='Done';
+  const overdue=!isDone&&isOverdue(t.due), today=!isDone&&isToday(t.due);
+  return `<div class="task-card priority-${t.priority.toLowerCase()} ${isDone?'done':''}">
+    <div class="task-check ${isDone?'checked':''}" onclick="toggleDone('${t.id}')"></div>
+    <div class="task-body">
+      <div class="task-title">${t.title}</div>
+      <div class="task-meta">
+        <span class="tag ${catClass}">${t.cat}</span>
+        <span class="priority-tag ${priClass}">${t.priority}</span>
+        ${t.escalated?`<span class="escalation-flag">⚑ Escalated</span>`:''}
+        ${t.due?`<span class="due-date ${overdue?'overdue':today?'today':''}">${overdue?'⚠ ':today?'⏰ ':'📅 '}${fmt(t.due)}</span>`:''}
+        <span style="font-size:11px;color:var(--muted);font-family:var(--mono)">${t.status}</span>
+      </div>
+      ${t.notes?`<div style="font-size:12px;color:var(--muted);margin-top:6px;line-height:1.5">${t.notes}</div>`:''}
+    </div>
+    <div class="task-actions">
+      <button class="icon-btn ${t.escalated?'escalated':''}" title="Toggle escalation" onclick="toggleEscalate('${t.id}')">⚑</button>
+      <button class="icon-btn" title="Edit" onclick="editTask('${t.id}')">✏</button>
+      <button class="icon-btn" title="Delete" onclick="deleteTask('${t.id}')" style="color:var(--red)">✕</button>
+    </div>
+  </div>`;
+}
+
+function renderDashboard() {
+  const active=tasks.filter(t=>t.status!=='Done');
+  const done=tasks.filter(t=>t.status==='Done');
+  const critical=tasks.filter(t=>t.priority==='Critical'&&t.status!=='Done');
+  const escalated=tasks.filter(t=>t.escalated&&t.status!=='Done');
+  const openInc=incidents.filter(i=>i.status!=='Resolved');
+  const pct=tasks.length?Math.round(done.length/tasks.length*100):0;
+  const todayTasks=tasks.filter(t=>isToday(t.due)&&t.status!=='Done');
+  const overdueTasks=tasks.filter(t=>isOverdue(t.due)&&t.status!=='Done');
+  const name=currentUser?.displayName?.split(' ')[0]||'there';
+  return `
+    <div style="margin-bottom:20px">
+      <div style="font-size:20px;font-weight:600;margin-bottom:4px">Good ${greet()}, ${name}</div>
+      <div style="font-size:13px;color:var(--muted)">${new Date().toLocaleDateString('en-ZA',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
+    </div>
+    <div class="stats-grid">
+      <div class="stat-card"><div class="stat-label">Active Tasks</div><div class="stat-value stat-accent">${active.length}</div><div class="stat-sub">${done.length} completed</div></div>
+      <div class="stat-card"><div class="stat-label">Critical / High</div><div class="stat-value stat-red">${critical.length+tasks.filter(t=>t.priority==='High'&&t.status!=='Done').length}</div><div class="stat-sub">${escalated.length} escalated</div></div>
+      <div class="stat-card"><div class="stat-label">Open Incidents</div><div class="stat-value stat-amber">${openInc.length}</div><div class="stat-sub">${incidents.length} total logged</div></div>
+      <div class="stat-card"><div class="stat-label">Completion</div><div class="stat-value stat-green">${pct}%</div><div class="progress-bar" style="margin-top:8px"><div class="progress-fill" style="width:${pct}%;background:var(--green)"></div></div></div>
+    </div>
+    ${overdueTasks.length?`<div style="background:var(--red-dim);border:1px solid var(--red);border-radius:var(--radius-lg);padding:12px 16px;margin-bottom:20px;display:flex;align-items:center;gap:10px"><span style="color:var(--red);font-size:16px">⚠</span><div><div style="color:var(--red);font-weight:500;font-size:13px">${overdueTasks.length} overdue task${overdueTasks.length>1?'s':''}</div><div style="color:var(--muted);font-size:12px">${overdueTasks.map(t=>t.title).join(', ')}</div></div></div>`:''}
+    <div class="section-header"><div class="section-title">Due Today <div class="section-line"></div></div><button class="btn btn-sm" onclick="openAddTask()">+ Add</button></div>
+    <div class="tasks-list">${todayTasks.length?todayTasks.map(taskCard).join(''):`<div class="empty-state"><div class="empty-state-icon">☑</div>No tasks due today</div>`}</div>
+    <div class="section-header"><div class="section-title">Critical & Escalated <div class="section-line"></div></div></div>
+    <div class="tasks-list">${critical.length||escalated.length?[...new Map([...critical,...escalated].map(t=>[t.id,t])).values()].map(taskCard).join(''):`<div class="empty-state"><div class="empty-state-icon">✓</div>No critical or escalated tasks</div>`}</div>
+    <div class="section-header"><div class="section-title">Recent Shift Notes <div class="section-line"></div></div><button class="btn btn-sm" onclick="openNoteModal()">+ Note</button></div>
+    ${shiftNotes.length?shiftNotes.slice(0,3).map(n=>`<div class="shift-note-item">${n.text}<div class="shift-note-time">${new Date(n.ts).toLocaleString('en-ZA')}</div></div>`).join(''):`<div class="empty-state" style="padding:20px"><div class="empty-state-icon">📋</div>No shift notes yet</div>`}
+  `;
+}
+
+function renderTasks() {
+  let filtered=[...tasks], heading='All Tasks';
+  if (activeFilter) {
+    if(activeFilter.type==='cat'){filtered=filtered.filter(t=>t.cat===activeFilter.value);heading=activeFilter.value+' Tasks';}
+    else if(activeFilter.type==='priority'){filtered=filtered.filter(t=>t.priority===activeFilter.value);heading=activeFilter.value+' Priority';}
+    else if(activeFilter.type==='escalated'){filtered=filtered.filter(t=>t.escalated);heading='Escalated Tasks';}
+  }
+  const todo=filtered.filter(t=>t.status==='To Do');
+  const inprog=filtered.filter(t=>t.status==='In Progress');
+  const done=filtered.filter(t=>t.status==='Done');
+  return `
+    <div class="section-header"><div class="section-title">${heading} <div class="section-line"></div></div><button class="btn" onclick="openAddTask()">+ New Task</button></div>
+    <div class="tabs">
+      <button class="tab active" onclick="switchTab(this,'todo')">To Do (${todo.length})</button>
+      <button class="tab" onclick="switchTab(this,'inprog')">In Progress (${inprog.length})</button>
+      <button class="tab" onclick="switchTab(this,'done')">Done (${done.length})</button>
+    </div>
+    <div id="tab-todo" class="tasks-list">${todo.length?todo.map(taskCard).join(''):`<div class="empty-state"><div class="empty-state-icon">📭</div>No tasks here</div>`}</div>
+    <div id="tab-inprog" class="tasks-list" style="display:none">${inprog.length?inprog.map(taskCard).join(''):`<div class="empty-state"><div class="empty-state-icon">⏳</div>Nothing in progress</div>`}</div>
+    <div id="tab-done" class="tasks-list" style="display:none">${done.length?done.map(taskCard).join(''):`<div class="empty-state"><div class="empty-state-icon">🏁</div>Nothing completed yet</div>`}</div>
+  `;
+}
+
+function renderIncidents() {
+  return `
+    <div class="section-header"><div class="section-title">Incident & Ticket Tracker <div class="section-line"></div></div><button class="btn btn-danger" onclick="openIncModal()">+ Log Incident</button></div>
+    ${incidents.length===0?`<div class="empty-state" style="padding:60px 20px"><div class="empty-state-icon">🛡</div>No incidents logged</div>`:
+    incidents.map(i=>`<div class="incident-card">
+      <div>
+        <div class="incident-id">${i.ref||'INC-'+i.id.slice(-4).toUpperCase()}</div>
+        <div class="incident-title">${i.title}</div>
+        ${i.details?`<div style="font-size:12px;color:var(--muted);line-height:1.5">${i.details}</div>`:''}
+        <div style="margin-top:8px;font-size:11px;font-family:var(--mono);color:var(--muted)">${new Date(i.ts).toLocaleString('en-ZA')}</div>
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:8px">
+        <span class="status-badge status-${i.status.toLowerCase().replace(' ','')}">${i.status}</span>
+        <select class="form-select" style="width:130px;font-size:11px;padding:4px 8px" onchange="updateIncStatus('${i.id}',this.value)">
+          <option ${i.status==='Open'?'selected':''}>Open</option>
+          <option ${i.status==='In Progress'?'selected':''}>In Progress</option>
+          <option ${i.status==='Resolved'?'selected':''}>Resolved</option>
+        </select>
+        <button class="icon-btn" onclick="deleteInc('${i.id}')" style="color:var(--red)">✕</button>
+      </div>
+    </div>`).join('')}
+  `;
+}
+
+function renderShift() {
+  return `
+    <div class="section-header"><div class="section-title">Shift Notes & Handover Log <div class="section-line"></div></div><button class="btn" onclick="openNoteModal()">+ Add Note</button></div>
+    ${shiftNotes.length===0?`<div class="empty-state" style="padding:60px 20px"><div class="empty-state-icon">📋</div>No shift notes yet</div>`:
+    shiftNotes.map(n=>`<div class="shift-note-item">
+      <div style="display:flex;justify-content:space-between;align-items:start">
+        <div style="flex:1">${n.text}</div>
+        <button class="icon-btn" onclick="deleteNote('${n.id}')" style="color:var(--red);margin-left:8px;flex-shrink:0">✕</button>
+      </div>
+      <div class="shift-note-time">${new Date(n.ts).toLocaleString('en-ZA')}</div>
+    </div>`).join('')}
+  `;
+}
+
+function renderReport() {
+  const total=tasks.length, done=tasks.filter(t=>t.status==='Done').length;
+  const inprog=tasks.filter(t=>t.status==='In Progress').length, todo=tasks.filter(t=>t.status==='To Do').length;
+  const pct=total?Math.round(done/total*100):0;
+  const openInc=incidents.filter(i=>i.status!=='Resolved').length;
+  const resolvedInc=incidents.filter(i=>i.status==='Resolved').length;
+  return `
+    <div class="section-header"><div class="section-title">Shift / Daily Report <div class="section-line"></div></div><button class="btn" onclick="window.print()">🖨 Print</button></div>
+    <div style="font-size:12px;color:var(--muted);font-family:var(--mono);margin-bottom:20px">Generated: ${new Date().toLocaleString('en-ZA')}</div>
+    <div class="report-section">
+      <div class="report-title">Task Summary</div>
+      <div class="report-row"><span>Total</span><span style="font-family:var(--mono)">${total}</span></div>
+      <div class="report-row"><span style="color:var(--green)">✓ Completed</span><span style="font-family:var(--mono);color:var(--green)">${done} (${pct}%)</span></div>
+      <div class="report-row"><span style="color:var(--amber)">⟳ In Progress</span><span style="font-family:var(--mono);color:var(--amber)">${inprog}</span></div>
+      <div class="report-row"><span>○ To Do</span><span style="font-family:var(--mono)">${todo}</span></div>
+      <div class="progress-bar" style="margin-top:12px"><div class="progress-fill" style="width:${pct}%;background:var(--green)"></div></div>
+    </div>
+    <div class="report-section">
+      <div class="report-title">By Category</div>
+      <div class="report-row"><span style="color:var(--accent)">◆ IT</span><span style="font-family:var(--mono)">${tasks.filter(t=>t.cat==='IT').length}</span></div>
+      <div class="report-row"><span style="color:var(--purple)">◆ Training</span><span style="font-family:var(--mono)">${tasks.filter(t=>t.cat==='Training').length}</span></div>
+      <div class="report-row"><span style="color:var(--red)">◆ Incidents</span><span style="font-family:var(--mono)">${tasks.filter(t=>t.cat==='Incident').length}</span></div>
+    </div>
+    <div class="report-section">
+      <div class="report-title">Priority & Escalation</div>
+      <div class="report-row"><span style="color:var(--red)">● Critical</span><span style="font-family:var(--mono);color:var(--red)">${tasks.filter(t=>t.priority==='Critical').length}</span></div>
+      <div class="report-row"><span style="color:var(--amber)">● High</span><span style="font-family:var(--mono);color:var(--amber)">${tasks.filter(t=>t.priority==='High').length}</span></div>
+      <div class="report-row"><span style="color:var(--red)">⚑ Escalated</span><span style="font-family:var(--mono);color:var(--red)">${tasks.filter(t=>t.escalated).length}</span></div>
+    </div>
+    <div class="report-section">
+      <div class="report-title">Incident Log</div>
+      <div class="report-row"><span>Total Logged</span><span style="font-family:var(--mono)">${incidents.length}</span></div>
+      <div class="report-row"><span style="color:var(--red)">Open</span><span style="font-family:var(--mono);color:var(--red)">${openInc}</span></div>
+      <div class="report-row"><span style="color:var(--green)">Resolved</span><span style="font-family:var(--mono);color:var(--green)">${resolvedInc}</span></div>
+    </div>
+    <div class="report-section">
+      <div class="report-title">Shift Notes (${shiftNotes.length})</div>
+      ${shiftNotes.length?shiftNotes.map(n=>`<div class="report-row" style="flex-direction:column;align-items:flex-start;gap:4px"><div>${n.text}</div><div style="font-size:11px;font-family:var(--mono);color:var(--muted)">${new Date(n.ts).toLocaleString('en-ZA')}</div></div>`).join(''):`<div style="color:var(--muted);font-size:13px;padding:8px 0">No shift notes recorded</div>`}
+    </div>
+  `;
+}
+</script>
+</body>
+</html>
