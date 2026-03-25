@@ -150,6 +150,15 @@ body{font-family:var(--font);background:var(--bg);color:var(--text);min-height:1
 /* ALERT */
 .alert{background:var(--red-dim);border:1px solid var(--red);border-radius:var(--rl);padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:10px;}
 
+/* QUOTE CARD */
+.quote-card{background:var(--surface);border:1px solid var(--border);border-left:3px solid var(--purple);border-radius:var(--rl);padding:14px 16px;margin-bottom:20px;position:relative;}
+.quote-source-badge{display:inline-flex;align-items:center;gap:5px;background:var(--purple-dim);border:1px solid #3d2a6e;color:var(--purple);font-size:10px;font-family:var(--mono);padding:2px 8px;border-radius:4px;margin-bottom:10px;}
+.quote-text{font-size:14px;color:var(--text);line-height:1.65;font-style:italic;margin-bottom:8px;}
+.quote-text::before{content:'\201C';color:var(--purple);font-size:22px;line-height:0;vertical-align:-6px;margin-right:3px;}
+.quote-text::after{content:'\201D';color:var(--purple);font-size:22px;line-height:0;vertical-align:-6px;margin-left:3px;}
+.quote-attr{font-size:11px;font-family:var(--mono);color:var(--muted);}
+.quote-attr strong{color:var(--muted);font-weight:500;}
+
 /* MODAL */
 .modal-overlay{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:200;align-items:flex-end;justify-content:center;}
 .modal-overlay.open{display:flex;}
@@ -648,6 +657,97 @@ function tcard(t){
   </div>`;
 }
 
+// DAILY QUOTES — keyed by date so it stays the same all day, changes each morning
+const QUOTES=[
+  {text:"The only way to do great work is to love what you do.",attr:"Steve Jobs",source:"Stanford Commencement Speech",type:"Speech"},
+  {text:"It does not do to dwell on dreams and forget to live.",attr:"Albus Dumbledore",source:"Harry Potter & the Philosopher's Stone",type:"Book"},
+  {text:"In the middle of difficulty lies opportunity.",attr:"Albert Einstein",source:"",type:"Quote"},
+  {text:"Whatever you are, be a good one.",attr:"Abraham Lincoln",source:"",type:"Quote"},
+  {text:"I am the master of my fate, I am the captain of my soul.",attr:"William Ernest Henley",source:"Invictus",type:"Poem"},
+  {text:"The flower that blooms in adversity is the rarest and most beautiful of all.",attr:"The Emperor",source:"Mulan",type:"Movie"},
+  {text:"Even if I don't have a reason to live, I'll find one.",attr:"Eren Yaeger",source:"Attack on Titan",type:"Anime"},
+  {text:"People's dreams never end.",attr:"Marshall D. Teach",source:"One Piece",type:"Anime"},
+  {text:"Hard work is worthless for those that don't believe in themselves.",attr:"Naruto Uzumaki",source:"Naruto",type:"Anime"},
+  {text:"A lesson without pain is meaningless. That's because no one can gain without sacrificing something.",attr:"Edward Elric",source:"Fullmetal Alchemist: Brotherhood",type:"Anime"},
+  {text:"It's not about the size of the dog in the fight. It's the size of the fight in the dog.",attr:"Mark Twain",source:"",type:"Quote"},
+  {text:"To infinity and beyond!",attr:"Buzz Lightyear",source:"Toy Story",type:"Movie"},
+  {text:"Why so serious?",attr:"The Joker",source:"The Dark Knight",type:"Movie"},
+  {text:"After all this time? Always.",attr:"Severus Snape",source:"Harry Potter & the Deathly Hallows",type:"Book"},
+  {text:"Not all those who wander are lost.",attr:"J.R.R. Tolkien",source:"The Lord of the Rings",type:"Book"},
+  {text:"I will not say: do not weep; for not all tears are an evil.",attr:"Gandalf",source:"The Return of the King",type:"Book"},
+  {text:"You shall not pass!",attr:"Gandalf",source:"The Fellowship of the Ring",type:"Movie"},
+  {text:"Life is not measured by the number of breaths we take, but by the moments that take our breath away.",attr:"Maya Angelou",source:"",type:"Quote"},
+  {text:"The real voyage of discovery consists not in seeking new landscapes, but in having new eyes.",attr:"Marcel Proust",source:"In Search of Lost Time",type:"Book"},
+  {text:"I can't go back to yesterday because I was a different person then.",attr:"Lewis Carroll",source:"Alice in Wonderland",type:"Book"},
+  {text:"We accept the love we think we deserve.",attr:"Stephen Chbosky",source:"The Perks of Being a Wallflower",type:"Book"},
+  {text:"It's the possibility of having a dream come true that makes life interesting.",attr:"Paulo Coelho",source:"The Alchemist",type:"Book"},
+  {text:"When you want something, all the universe conspires in helping you to achieve it.",attr:"Paulo Coelho",source:"The Alchemist",type:"Book"},
+  {text:"Do. Or do not. There is no try.",attr:"Yoda",source:"Star Wars: The Empire Strikes Back",type:"Movie"},
+  {text:"I am your father.",attr:"Darth Vader",source:"Star Wars: The Empire Strikes Back",type:"Movie"},
+  {text:"With great power comes great responsibility.",attr:"Uncle Ben",source:"Spider-Man",type:"Movie"},
+  {text:"I could do this all day.",attr:"Steve Rogers",source:"Marvel Cinematic Universe",type:"Movie"},
+  {text:"The secret of getting ahead is getting started.",attr:"Mark Twain",source:"",type:"Quote"},
+  {text:"In three words I can sum up everything I've learned about life: it goes on.",attr:"Robert Frost",source:"",type:"Quote"},
+  {text:"Two things are infinite: the universe and human stupidity. And I'm not sure about the universe.",attr:"Albert Einstein",source:"",type:"Quote"},
+  {text:"You miss 100% of the shots you don't take.",attr:"Wayne Gretzky",source:"",type:"Quote"},
+  {text:"Whether you think you can or you think you can't, you're right.",attr:"Henry Ford",source:"",type:"Quote"},
+  {text:"I have not failed. I've just found 10,000 ways that won't work.",attr:"Thomas A. Edison",source:"",type:"Quote"},
+  {text:"Darkness cannot drive out darkness; only light can do that.",attr:"Martin Luther King Jr.",source:"Strength to Love",type:"Book"},
+  {text:"The world is a book and those who do not travel read only one page.",attr:"Saint Augustine",source:"",type:"Quote"},
+  {text:"Be yourself; everyone else is already taken.",attr:"Oscar Wilde",source:"",type:"Quote"},
+  {text:"Success is not final, failure is not fatal: it is the courage to continue that counts.",attr:"Winston Churchill",source:"",type:"Quote"},
+  {text:"The journey of a thousand miles begins with one step.",attr:"Lao Tzu",source:"Tao Te Ching",type:"Book"},
+  {text:"What we think, we become.",attr:"Buddha",source:"",type:"Quote"},
+  {text:"The unexamined life is not worth living.",attr:"Socrates",source:"Plato's Apology",type:"Book"},
+  {text:"It always seems impossible until it's done.",attr:"Nelson Mandela",source:"",type:"Quote"},
+  {text:"Keep your face always toward the sunshine, and shadows will fall behind you.",attr:"Walt Whitman",source:"",type:"Quote"},
+  {text:"Spread love everywhere you go. Let no one ever come to you without leaving happier.",attr:"Mother Teresa",source:"",type:"Quote"},
+  {text:"When life gives you lemons, make lemonade.",attr:"Elbert Hubbard",source:"",type:"Quote"},
+  {text:"You have brains in your head. You have feet in your shoes. You can steer yourself any direction you choose.",attr:"Dr. Seuss",source:"Oh, the Places You'll Go!",type:"Book"},
+  {text:"Believe you can and you're halfway there.",attr:"Theodore Roosevelt",source:"",type:"Quote"},
+  {text:"Act as if what you do makes a difference. It does.",attr:"William James",source:"",type:"Quote"},
+  {text:"I am the hope of the universe. I am the answer to all living things that cry out for peace.",attr:"Son Goku",source:"Dragon Ball Z",type:"Anime"},
+  {text:"A place where someone still thinks about you is a place you can call home.",attr:"Jiraiya",source:"Naruto",type:"Anime"},
+  {text:"If you don't take risks, you can't create a future.",attr:"Monkey D. Luffy",source:"One Piece",type:"Anime"},
+  {text:"Those who break the rules are trash, but those who abandon their comrades are worse than trash.",attr:"Kakashi Hatake",source:"Naruto",type:"Anime"},
+  {text:"The world isn't perfect. But it's there for us, doing the best it can. That's what makes it so damn beautiful.",attr:"Roy Mustang",source:"Fullmetal Alchemist",type:"Anime"},
+  {text:"Fear is not evil. It tells you what your weakness is. And once you know your weakness, you can become stronger.",attr:"Gildarts Clive",source:"Fairy Tail",type:"Anime"},
+  {text:"Life is not a game of luck. If you wanna win, work hard.",attr:"Sora",source:"No Game No Life",type:"Anime"},
+  {text:"You can't sit around envying other people's worlds. You have to go out and change your own.",attr:"Shinichi Izumi",source:"Parasyte",type:"Anime"},
+  {text:"If you don't like your destiny, don't accept it. Instead, have the courage to change it the way you want it to be.",attr:"Uzumaki Naruto",source:"Naruto",type:"Anime"},
+  {text:"Move. Don't think. If you think, you'll lose your mind.",attr:"Mikasa Ackerman",source:"Attack on Titan",type:"Anime"},
+  {text:"You should enjoy the little detours to the fullest. Because that's where you'll find the things more important than what you want.",attr:"Ging Freecss",source:"Hunter x Hunter",type:"Anime"},
+  {text:"Forgetting is like a wound. The wound may heal but it has already left a scar.",attr:"Monkey D. Luffy",source:"One Piece",type:"Anime"},
+  {text:"The truth is… I'm just a regular person. And that's fine.",attr:"Mob",source:"Mob Psycho 100",type:"Anime"},
+  {text:"Just because you're correct doesn't mean you're right.",attr:"Yashiro Nene",source:"Toilet-Bound Hanako-kun",type:"Anime"},
+  {text:"A man who cannot protect his nakama is not worth calling a man at all.",attr:"Sanji",source:"One Piece",type:"Anime"},
+  {text:"The measure of a man is not how much he suffers in the test, but how he stands up after.",attr:"General Martok",source:"Star Trek: Deep Space Nine",type:"TV"},
+  {text:"You are the only one who can limit your greatness.",attr:"Future",source:"",type:"Music"},
+  {text:"I'm not in this world to live up to your expectations and you're not in this world to live up to mine.",attr:"Bruce Lee",source:"",type:"Quote"},
+  {text:"Don't watch the clock; do what it does. Keep going.",attr:"Sam Levenson",source:"",type:"Quote"},
+  {text:"Hardships often prepare ordinary people for an extraordinary destiny.",attr:"C.S. Lewis",source:"",type:"Quote"},
+];
+
+function getDailyQuote(){
+  const today=new Date();
+  const seed=today.getFullYear()*10000+(today.getMonth()+1)*100+today.getDate();
+  const idx=seed%QUOTES.length;
+  return QUOTES[idx];
+}
+
+const TYPE_ICONS={Book:'📖',Anime:'⛩',Movie:'🎬',TV:'📺',Speech:'🎤',Poem:'✍',Music:'🎵',Quote:'💬'};
+
+function quoteCard(){
+  const q=getDailyQuote();
+  const icon=TYPE_ICONS[q.type]||'💬';
+  const src=q.source?` — ${q.source}`:'';
+  return`<div class="quote-card">
+    <div class="quote-source-badge">${icon} ${q.type}</div>
+    <div class="quote-text">${q.text}</div>
+    <div class="quote-attr"><strong>${q.attr}</strong>${src}</div>
+  </div>`;
+}
+
 function vDash(){
   const dn=tasks.filter(t=>t.status==='Done');
   const act=tasks.filter(t=>t.status!=='Done');
@@ -659,10 +759,11 @@ function vDash(){
   const ovdT=tasks.filter(t=>isOD(t.due)&&t.status!=='Done');
   const name=(user?.displayName||'').split(' ')[0]||'there';
   return`
-    <div style="margin-bottom:16px">
+    <div style="margin-bottom:14px">
       <div style="font-size:18px;font-weight:600;margin-bottom:3px">Good ${greet()}, ${name}</div>
       <div style="font-size:12px;color:var(--muted)">${new Date().toLocaleDateString('en-ZA',{weekday:'long',day:'numeric',month:'long',year:'numeric'})}</div>
     </div>
+    ${quoteCard()}
     <div class="stats-grid">
       <div class="stat"><div class="stat-lbl">Active</div><div class="stat-val ca">${act.length}</div><div class="stat-sub">${dn.length} completed</div></div>
       <div class="stat"><div class="stat-lbl">Crit/High</div><div class="stat-val cr">${crit.length+tasks.filter(t=>t.priority==='High'&&t.status!=='Done').length}</div><div class="stat-sub">${esc.length} escalated</div></div>
