@@ -3,7 +3,9 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
-<title>TaskFlow</title>
+<title>TaskFlow — Personal productivity workspace</title>
+<meta name="description" content="TaskFlow keeps tasks, workspaces, notes, issues, reminders, and reports organized in one focused workspace.">
+<meta name="theme-color" content="#1a1714">
 <link rel="icon" type="image/svg+xml" href="assets/images/icon 2.svg">
 <link href="https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=DM+Mono:wght@300;400;500&display=swap" rel="stylesheet">
 <style>
@@ -898,7 +900,7 @@ window.updateCatOptions=()=>{
   catSel.innerHTML=Object.entries(cats).map(([k,v])=>`<option value="${k}">${v.icon} ${k}</option>`).join('');
 };
 
-// ── REMINDER STATE ──────────────────────────────────────────────────────────
+// ── REMINDER STATE ──────────────────────────────────────────────��───────────
 let remSettings={globalEnabled:false,leadMinutes:10,alertOverdue:true,browserNotif:false,sound:true};
 let firedRem=new Set(),remInterval=null,audioCtx=null;
 const snoozed={};
