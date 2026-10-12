@@ -5,7 +5,16 @@ const {
   assertSucceeds,
   initializeTestEnvironment,
 } = require('@firebase/rules-unit-testing')
-const { doc, deleteDoc, getDoc, setDoc, updateDoc } = require('firebase/firestore')
+const {
+  collection,
+  deleteDoc,
+  doc,
+  getDoc,
+  getDocs,
+  query,
+  setDoc,
+  updateDoc,
+} = require('firebase/firestore')
 const fs = require('node:fs')
 const path = require('node:path')
 
@@ -73,6 +82,51 @@ test('a user cannot access another user\'s documents', async () => {
     await assertFails(setDoc(otherRef, { title: 'overwrite' }))
     await assertFails(updateDoc(otherRef, { title: 'overwrite' }))
     await assertFails(deleteDoc(otherRef))
+  }
+})
+
+test('collection queries allow only the authenticated user scope', async () => {
+  const ownerDb = testEnv.authenticatedContext(users.a).firestore()
+  const otherDb = testEnv.authenticatedContext(users.b).firestore()
+
+  for (const name of collections) {
+    await assertSucceeds(setDoc(userDoc(ownerDb, users.a, name, `${name}-one`), { owner: users.a }))
+    await assertSucceeds(setDoc(userDoc(ownerDb, users.a, name, `${name}-two`), { owner: users.a }))
+    await assertFails(getDocs(query(collection(otherDb, 'users', users.a, name))))
+    const snapshot = await assertSucceeds(getDocs(query(collection(ownerDb, 'users', users.a, name))))
+    assert.equal(snapshot.size, 2)
+    assert.ok(snapshot.docs.every((item) => item.data().owner === users.a))
+  }
+})
+
+test('root-level user documents are denied for both owners and other users', async () => {
+  const ownerDb = testEnv.authenticatedContext(users.a).firestore()
+  const otherDb = testEnv.authenticatedContext(users.b).firestore()
+
+  for (const db of [ownerDb, otherDb]) {
+    await assertFails(getDoc(doc(db, 'users', users.a)))
+    await assertFails(setDoc(doc(db, 'users', users.a), { blocked: true }))
+  }
+})
+
+test('unknown top-level collections are denied for unauthenticated and authenticated clients', async () => {
+  const unauthenticatedDb = testEnv.unauthenticatedContext().firestore()
+  const authenticatedDb = testEnv.authenticatedContext(users.a).firestore()
+
+  for (const db of [unauthenticatedDb, authenticatedDb]) {
+    const ref = doc(db, 'arbitrary', 'document')
+    await assertFails(getDoc(ref))
+    await assertFails(setDoc(ref, { blocked: true }))
+  }
+})
+
+test('unexpected nested paths beneath supported collections are denied', async () => {
+  const db = testEnv.authenticatedContext(users.a).firestore()
+
+  for (const name of collections) {
+    const nestedRef = doc(db, 'users', users.a, name, 'document', 'nested', 'child')
+    await assertFails(getDoc(nestedRef))
+    await assertFails(setDoc(nestedRef, { blocked: true }))
   }
 })
 
