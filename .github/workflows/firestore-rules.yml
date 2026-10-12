@@ -1,0 +1,59 @@
+name: Firestore Rules Tests
+
+on:
+  pull_request:
+    paths:
+      - 'firestore.rules'
+      - 'firebase.json'
+      - 'tests/firestore.rules.test.js'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/firestore-rules.yml'
+  push:
+    paths:
+      - 'firestore.rules'
+      - 'firebase.json'
+      - 'tests/firestore.rules.test.js'
+      - 'package.json'
+      - 'package-lock.json'
+      - '.github/workflows/firestore-rules.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  rules:
+    runs-on: ubuntu-latest
+    env:
+      GCLOUD_PROJECT: taskflow-rules-test
+      FIREBASE_PROJECT: taskflow-rules-test
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      - name: Set up Java
+        uses: actions/setup-java@v5
+        with:
+          distribution: temurin
+          java-version: '21'
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Run Firestore rules tests in the emulator
+        run: npm run test:rules
+        env:
+          FIRESTORE_EMULATOR_HOST: 127.0.0.1:8080
+          FIREBASE_CONFIG: '{"projectId":"taskflow-rules-test"}'
+
+      - name: Verify no production deployment occurred
+        if: always()
+        run: test "$GCLOUD_PROJECT" = "taskflow-rules-test" && test "$FIREBASE_PROJECT" = "taskflow-rules-test"
